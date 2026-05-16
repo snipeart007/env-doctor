@@ -1,0 +1,66 @@
+profiles:
+  - name: transformers
+    kv_overhead_multiplier: 1.0
+    fragmentation_multiplier: 1.2
+    supports_quantization: true
+    supports_flash_attention: true
+    description: Standard HuggingFace Transformers library
+    typical_use_case: General-purpose model inference and fine-tuning
+
+  - name: vllm
+    kv_overhead_multiplier: 0.85
+    fragmentation_multiplier: 1.1
+    supports_quantization: true
+    supports_flash_attention: true
+    description: vLLM - optimized inference engine with PagedAttention
+    typical_use_case: High-throughput LLM serving with continuous batching
+
+  - name: tgi
+    kv_overhead_multiplier: 0.9
+    fragmentation_multiplier: 1.15
+    supports_quantization: true
+    supports_flash_attention: true
+    description: Text Generation Inference by HuggingFace
+    typical_use_case: Production LLM serving with optimized batching
+
+  - name: text-generation-inference
+    kv_overhead_multiplier: 0.9
+    fragmentation_multiplier: 1.15
+    supports_quantization: true
+    supports_flash_attention: true
+    description: Text Generation Inference by HuggingFace
+    typical_use_case: Production LLM serving with optimized batching
+
+  - name: deepspeed
+    kv_overhead_multiplier: 1.1
+    fragmentation_multiplier: 1.25
+    supports_quantization: true
+    supports_flash_attention: true
+    description: DeepSpeed inference with ZeRO optimization
+    typical_use_case: Large-scale model training and inference
+
+  - name: tensorrt-llm
+    kv_overhead_multiplier: 0.8
+    fragmentation_multiplier: 1.05
+    supports_quantization: true
+    supports_flash_attention: true
+    description: NVIDIA TensorRT-LLM optimized inference
+    typical_use_case: Maximum performance NVIDIA GPU inference
+
+  - name: llama.cpp
+    kv_overhead_multiplier: 0.95
+    fragmentation_multiplier: 1.1
+    supports_quantization: true
+    supports_flash_attention: false
+    description: llama.cpp CPU/GPU inference
+    typical_use_case: Efficient inference on consumer hardware
+
+  - name: onnxruntime
+    kv_overhead_multiplier: 1.0
+    fragmentation_multiplier: 1.15
+    supports_quantization: true
+    supports_flash_attention: false
+    description: ONNX Runtime for cross-platform inference
+    typical_use_case: Cross-platform optimized inference
+
+# Made with Bob
