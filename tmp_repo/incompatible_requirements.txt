@@ -1,0 +1,9 @@
+# This will trigger several errors:
+# 1. Flash Attention vs old Torch
+# 2. xformers vs wrong Torch
+# 3. Transformers vs old Tokenizers
+torch==2.0.1
+flash-attn==2.5.8
+xformers==0.0.27
+transformers==4.42.0
+tokenizers==0.18.0

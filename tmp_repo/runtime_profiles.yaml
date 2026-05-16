@@ -1,0 +1,15 @@
+profiles:
+  - runtime: "vllm"
+    kv_overhead_multiplier: 0.85
+    fragmentation_multiplier: 1.1
+    description: "vLLM with PagedAttention"
+  
+  - runtime: "transformers"
+    kv_overhead_multiplier: 1.0
+    fragmentation_multiplier: 1.2
+    description: "Standard Eager Transformers"
+
+  - runtime: "tgi"
+    kv_overhead_multiplier: 0.9
+    fragmentation_multiplier: 1.15
+    description: "Text Generation Inference"

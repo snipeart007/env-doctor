@@ -1,0 +1,61 @@
+rules:
+  # Torch/CUDA Mismatches
+  - package: "torch"
+    version_range: ">=2.4.0"
+    dependency: "cuda"
+    dependency_range: "<12.1"
+    type: "incompatible"
+    confidence: "production-tested"
+    severity: 100
+    description: "Torch 2.4+ requires CUDA 12.1 or higher for core functionality."
+    workaround: "Downgrade torch to 2.3.1 or upgrade CUDA drivers."
+
+  # Flash Attention vs Torch
+  - package: "flash-attn"
+    version_range: ">=2.5.0"
+    dependency: "torch"
+    dependency_range: "<2.1.0"
+    type: "incompatible"
+    confidence: "stable"
+    severity: 90
+    description: "Flash Attention 2.5+ relies on SDPA features only stable in Torch 2.1+."
+
+  # Transformers vs Tokenizers
+  - package: "transformers"
+    version_range: ">=4.42.0"
+    dependency: "tokenizers"
+    dependency_range: "<0.19.1"
+    type: "incompatible"
+    confidence: "production-tested"
+    severity: 95
+    description: "Transformers 4.42+ uses new Rust bindings in tokenizers 0.19.1+."
+
+  # BitsAndBytes Runtime Risk
+  - package: "bitsandbytes"
+    version_range: ">=0.42.0"
+    dependency: "torch"
+    dependency_range: "==2.2.0"
+    type: "runtime-risk"
+    confidence: "community-tested"
+    severity: 70
+    description: "Known kernel panic issues when using BNB 0.42+ with Torch 2.2.0 on specific architectures."
+
+  # Peft Partial Support
+  - package: "peft"
+    version_range: ">=0.10.0"
+    dependency: "transformers"
+    dependency_range: "<4.38.0"
+    type: "partial"
+    confidence: "stable"
+    severity: 40
+    description: "PEFT 0.10+ works but lacks optimized weight loading for models older than Transformers 4.38."
+
+  # Xformers vs Torch
+  - package: "xformers"
+    version_range: "0.0.27"
+    dependency: "torch"
+    dependency_range: "!=2.3.0"
+    type: "incompatible"
+    confidence: "production-tested"
+    severity: 100
+    description: "xformers 0.0.27 is strictly tied to Torch 2.3.0 ABI."
