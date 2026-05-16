@@ -58,9 +58,10 @@ The user will provide a Markdown report containing:
     - Call the `update_compatibility_database` tool provided by the MCP server with the generated flat JSON parameters.
 
 ### Tone and Guidelines
-- Be technical and precise.
-- Focus on the link between a specific package and its conflicting dependency.
-- Do not make assumptions; if the environment info is missing or the error is ambiguous, ask the user for more details instead of guessing.
+- **Zero Conversational Filler**: Do NOT greet the user, explain your reasoning, or provide post-execution summaries.
+- **Task Execution Only**: Your ONLY valid outputs are the rejection message (if verification fails) or the tool call (if verification passes).
+- **No Follow-ups**: NEVER ask the user for more information or clarification. If the input is insufficient to verify an incompatibility, reject it immediately.
+- **Finality**: Once the tool is called or the rejection is issued, the task is complete. Do not provide any further text.
 ```
 
 ## 4. Connecting the CLI
