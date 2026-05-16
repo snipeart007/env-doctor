@@ -935,16 +935,26 @@ info = model_info("meta-llama/Llama-3-70B")
 ## Weight Memory
 
 ```txt
-weights_vram = params × bytes_per_param
+weight_memory = (embedding_params + total_attention_params + total_ffn_params) * bytes_per_param
 ```
+
+- **MoE Support:** Includes all experts in VRAM (routed + shared).
+- **GQA Support:** Accounts for reduced Key/Value head parameters.
 
 ---
 
 ## KV Cache
 
 ```txt
-kv_cache =
-batch × seq_len × hidden_size × layers × 2 × dtype_bytes
+kv_cache = 2 * batch * seq_len * num_layers * num_kv_heads * head_dim * bytes_per_element
+```
+
+---
+
+## Total VRAM Requirement
+
+```txt
+total_vram = (weight_memory + kv_cache) * fragmentation_multiplier + activation_memory + framework_overhead
 ```
 
 ---
