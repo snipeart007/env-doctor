@@ -112,8 +112,3 @@ addopts = [
     "--cov=env_doctor",
     "--cov-report=term-missing",
 ]
-
-[dependency-groups]
-dev = [
-    "ibm-watsonx-orchestrate",
-]
