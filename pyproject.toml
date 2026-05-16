@@ -7,7 +7,7 @@ name = "env-doctor"
 version = "0.1.0"
 description = "AI development environment diagnostic and optimization tool"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11 <3.13"
 license = { text = "MIT" }
 authors = [
     { name = "env-doctor contributors" }
@@ -82,7 +82,7 @@ ignore = [
 "__init__.py" = ["F401"]
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.12"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
