@@ -35,39 +35,36 @@ The user will provide a Markdown report containing:
     - **If Rejected**: Provide a clear, polite explanation of why the error is not considered an environment incompatibility and **HALT** execution. Do NOT call any tools.
 
 2.  **Analysis (If Verified)**:
-    - Identify the specific packages and versions involved in the conflict.
-    - Determine the root cause (e.g., "Package A v1.0 is incompatible with Package B v2.0").
-    - Formulate a resolution (e.g., "Upgrade Package A to v1.1" or "Downgrade Python to 3.9").
+    - Identify the specific **package** and its **dependency** involved in the conflict.
+    - Determine the root cause (e.g., "Package A v1.0 is incompatible with Dependency B v2.0").
+    - Formulate a resolution (e.g., "Upgrade Package A to v1.1" or "Downgrade Dependency B to 1.9").
 
 3.  **Generate Compatibility Entry**:
-    - Construct a structured JSON object following the `env-doctor` schema:
+    - Construct a simple, flat JSON object for the tool call:
       ```json
       {
-        "incompatibility": {
-          "error_type": "ImportError",
-          "error_message": "...",
-          "affected_packages": [
-            {"package": "pkg-name", "version": "1.2.3"}
-          ],
-          "resolution": {
-            "type": "version_constraint",
-            "description": "...",
-            "fix": "pip install pkg-name>=1.2.4"
-          }
-        }
+        "package": "torch",
+        "package_version_range": ">=2.4.0",
+        "dependency": "cuda",
+        "dependency_version_range": "<12.1",
+        "rule_type": "incompatible",
+        "severity": 100,
+        "description": "Torch 2.4+ requires CUDA 12.1 or higher for core functionality.",
+        "fix_suggestion": "Downgrade torch to 2.3.1 or upgrade CUDA drivers."
       }
       ```
 
 4.  **Update Database**:
-    - Call the `update_compatibility_database` tool provided by the MCP server with the generated JSON object.
+    - Call the `update_compatibility_database` tool provided by the MCP server with the generated flat JSON parameters.
 
 ### Tone and Guidelines
 - Be technical and precise.
+- Focus on the link between a specific package and its conflicting dependency.
 - Do not make assumptions; if the environment info is missing or the error is ambiguous, ask the user for more details instead of guessing.
 ```
 
 ## 4. Connecting the CLI
-Once the agent is set up, ensure the `env-doctor` CLI is configured to point to your Watsonx Orchestrate endpoint (this requires implementation in `src/env_doctor/cli/report.py`).
+Once the agent is set up, ensure the `env-doctor` CLI is configured to point to your Watsonx Orchestrate endpoint.
 
 For now, you can test the report generation locally using:
 ```bash

@@ -23,27 +23,55 @@ GITHUB_TOKEN = os.getenv("GITHUB_API_KEY") or os.getenv("GITHUB_TOKEN")
 
 
 @mcp.tool()
-async def update_compatibility_database(compatibility_rules: Dict[str, Any]) -> str:
+async def update_compatibility_database(
+    package: str,
+    package_version_range: str,
+    dependency: str,
+    dependency_version_range: str,
+    rule_type: str,
+    severity: int,
+    description: str,
+    fix_suggestion: str
+) -> str:
     """
     Add a new compatibility rule to the GitHub repository.
     
     Args:
-        compatibility_rules: A dictionary following the compatibility YAML schema.
-                             Must include 'incompatibility' details.
+        package: The name of the main package (e.g., 'torch').
+        package_version_range: Version range of the main package (e.g., '>=2.4.0').
+        dependency: The name of the conflicting dependency (e.g., 'cuda').
+        dependency_version_range: Version range of the dependency (e.g., '<12.1').
+        rule_type: Type of rule ('incompatible', 'runtime-risk', 'partial', 'compatible').
+        severity: Severity score from 0 to 100.
+        description: Detailed description of the incompatibility.
+        fix_suggestion: Suggested resolution or fix.
     """
     if not GITHUB_TOKEN:
         return "Error: GITHUB_API_KEY or GITHUB_TOKEN environment variable not set."
 
     try:
-        # 1. Prepare YAML content
-        yaml_content = yaml.dump(compatibility_rules, sort_keys=False)
+        # 1. Prepare structured YAML content from flat input
+        rule_data = {
+            "package": package,
+            "version_range": package_version_range,
+            "dependency": dependency,
+            "dependency_range": dependency_version_range,
+            "type": rule_type,
+            "confidence": "community-tested", # Default for AI-generated rules
+            "severity": severity,
+            "description": description,
+            "workaround": fix_suggestion
+        }
+        
+        # Wrap in 'rules' list as expected by the database repo
+        yaml_payload = {"rules": [rule_data]}
+        yaml_content = yaml.dump(yaml_payload, sort_keys=False)
         
         # 2. Determine file path
-        # Extract error type for filename
-        error_info = compatibility_rules.get("incompatibility", {})
-        error_type = error_info.get("error_type", "unknown_error").lower().replace(" ", "_")
+        error_type = package.lower().replace(" ", "_")
+        dep_type = dependency.lower().replace(" ", "_")
         timestamp = int(time.time())
-        file_path = f"compatibility/{error_type}_{timestamp}.yaml"
+        file_path = f"compatibility/{error_type}_{dep_type}_{timestamp}.yaml"
         
         # 3. GitHub API Call
         url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{file_path}"
@@ -54,9 +82,9 @@ async def update_compatibility_database(compatibility_rules: Dict[str, Any]) -> 
         }
         
         payload = {
-            "message": f"Add compatibility rule for {error_type}",
+            "message": f"Add compatibility rule: {package} vs {dependency}",
             "content": base64.b64encode(yaml_content.encode()).decode(),
-            "branch": "main" # Or a config base branch
+            "branch": "main"
         }
         
         async with httpx.AsyncClient() as client:
