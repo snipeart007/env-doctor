@@ -13,6 +13,7 @@ env-doctor is a comprehensive diagnostic tool designed to analyze and optimize A
 - **VRAM Optimization**: Analyze GPU memory usage and provide optimization recommendations
 - **Model Management**: Track and manage AI models from Hugging Face and other sources
 - **Reporting**: Generate detailed reports with actionable insights
+- **AI Collaboration**: Report incompatibilities to Watsonx Orchestrate and automatically update the database via MCP
 
 ## Installation
 

@@ -408,51 +408,45 @@ total_vram = (weight_memory + kv_cache) * fragmentation_multiplier + activation_
 
 ### Phase 8: Incompatibility Reporting (2-3 weeks)
 
-**Objectives:** Implement error reporting and AI analysis
+**Objectives:** Implement error reporting and AI analysis via Watsonx Orchestrate
 
 **Key Deliverables:**
-- Script/notebook execution system
-- Environment capture module
-- Submission client
-- Serverless endpoint
-- watsonx AI integration
-- Automated PR creation
+- Script/notebook execution system (cell-by-cell for notebooks)
+- Markdown report generator (Code + Output + Env Info)
+- Watsonx Orchestrate submission placeholder
+- Python MCP Server for GitHub database updates
+- Strict verification logic in AI agent prompt
+- Setup guide for Watsonx agent
 
 **Execution:**
-- Python scripts: `subprocess.run()`
-- Jupyter notebooks: `nbconvert` + `ExecutePreprocessor`
-- Timeout: 5-10 minutes
-- Capture: stdout, stderr, exit code
+- Python scripts: Full source capture and execution via `subprocess.run()`.
+- Jupyter notebooks: Programmatic execution via `nbclient` to capture outputs cell-by-cell.
+- Capture: Source code, stdout, stderr, and full environment manifest.
 
-**Environment Capture:**
-- Python version
-- Installed packages (`pip list`)
-- CUDA version
-- GPU information
-- OS information
-- Error traceback
+**Markdown Report Format:**
+- `## Python Code` or `## Cell [X]` sections for source.
+- `## Output` sections for execution results and tracebacks.
+- `## Environment Info` section with JSON snapshot of the system.
 
-**Submission Workflow:**
-1. Execute script locally
-2. Capture environment + error
-3. Submit to serverless endpoint
-4. AI analyzes with watsonx
-5. If verified, create PR to database repo
-6. Return submission ID
+**Watsonx Orchestrate Workflow:**
+1. Execute script/notebook locally.
+2. Generate comprehensive Markdown report.
+3. Submit Markdown to Watsonx Orchestrate agent.
+4. AI Agent performs **Strict Verification**: Rejects any error not caused by environment/package incompatibility.
+5. If verified, AI Agent generates structured compatibility JSON.
+6. AI Agent calls **MCP Server** tool (`update_compatibility_database`) to commit YAML to GitHub.
 
-**watsonx Analysis:**
-- Determine if dependency issue
-- Identify conflicting packages
-- Generate YAML entry
-- Provide confidence level
-- Explain reasoning
+**MCP Server:**
+- FastMCP-based Python server.
+- Tool: `update_compatibility_database` (updates GitHub repository).
+- Authentication: `GITHUB_API_KEY` environment variable.
 
 **Acceptance Criteria:**
-- Scripts execute safely
-- Environment captured completely
-- Submissions successful
-- AI analysis accurate
-- PRs created automatically
+- Notebooks executed cell-by-cell.
+- Markdown reports generated correctly.
+- MCP server functional and secure.
+- Strict verification logic enforced.
+- Documentation for setup complete.
 
 ---
 
