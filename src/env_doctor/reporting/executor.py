@@ -10,7 +10,7 @@ import sys
 import tempfile
 import traceback
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 
 from env_doctor.scanner.environment import get_full_environment_info
 
@@ -32,11 +32,7 @@ def execute_script(path: str, timeout: int = 300) -> Dict[str, Any]:
         - error: Optional[str]
         - traceback: Optional[str]
         - duration: float (seconds)
-        
-    Example:
-        >>> result = execute_script("test.py", timeout=60)
-        >>> if not result["success"]:
-        ...     print(result["error"])
+        - source_code: str
     """
     script_path = Path(path)
     
@@ -48,8 +44,14 @@ def execute_script(path: str, timeout: int = 300) -> Dict[str, Any]:
             "stderr": "",
             "error": f"Script not found: {path}",
             "traceback": None,
-            "duration": 0.0
+            "duration": 0.0,
+            "source_code": ""
         }
+    
+    try:
+        source_code = script_path.read_text(encoding='utf-8')
+    except Exception as e:
+        source_code = f"Error reading source: {e}"
     
     import time
     start_time = time.time()
@@ -87,7 +89,8 @@ def execute_script(path: str, timeout: int = 300) -> Dict[str, Any]:
             "stderr": result.stderr,
             "error": error_msg,
             "traceback": traceback_str,
-            "duration": duration
+            "duration": duration,
+            "source_code": source_code
         }
         
     except subprocess.TimeoutExpired:
@@ -99,7 +102,8 @@ def execute_script(path: str, timeout: int = 300) -> Dict[str, Any]:
             "stderr": "",
             "error": f"Script execution timed out after {timeout} seconds",
             "traceback": None,
-            "duration": duration
+            "duration": duration,
+            "source_code": source_code
         }
         
     except Exception as e:
@@ -111,46 +115,33 @@ def execute_script(path: str, timeout: int = 300) -> Dict[str, Any]:
             "stderr": "",
             "error": str(e),
             "traceback": traceback.format_exc(),
-            "duration": duration
+            "duration": duration,
+            "source_code": source_code
         }
 
 
 def execute_notebook(path: str, timeout: int = 300) -> Dict[str, Any]:
     """
-    Execute a Jupyter notebook and capture output.
+    Execute a Jupyter notebook and capture output cell-by-cell.
     
     Args:
         path: Path to Jupyter notebook (.ipynb)
         timeout: Execution timeout in seconds
         
     Returns:
-        Dictionary with execution results (same format as execute_script)
-        
-    Note:
-        Requires nbconvert and jupyter to be installed.
-        Converts notebook to Python script and executes it.
+        Dictionary with execution results:
+        - success: bool
+        - cells: List[Dict[str, Any]]
+        - error: Optional[str]
+        - duration: float
     """
     notebook_path = Path(path)
     
     if not notebook_path.exists():
         return {
             "success": False,
-            "exit_code": -1,
-            "stdout": "",
-            "stderr": "",
+            "cells": [],
             "error": f"Notebook not found: {path}",
-            "traceback": None,
-            "duration": 0.0
-        }
-    
-    if not notebook_path.suffix == ".ipynb":
-        return {
-            "success": False,
-            "exit_code": -1,
-            "stdout": "",
-            "stderr": "",
-            "error": f"Not a Jupyter notebook: {path}",
-            "traceback": None,
             "duration": 0.0
         }
     
@@ -158,106 +149,128 @@ def execute_notebook(path: str, timeout: int = 300) -> Dict[str, Any]:
     start_time = time.time()
     
     try:
-        # Check if nbconvert is available
-        try:
-            import nbconvert
-        except ImportError:
-            return {
-                "success": False,
-                "exit_code": -1,
-                "stdout": "",
-                "stderr": "",
-                "error": "nbconvert not installed. Install with: pip install nbconvert",
-                "traceback": None,
-                "duration": 0.0
-            }
+        import nbformat
+        from nbclient import NotebookClient
         
-        # Convert notebook to Python script
-        with tempfile.NamedTemporaryFile(
-            mode='w',
-            suffix='.py',
-            delete=False,
-            encoding='utf-8'
-        ) as tmp_script:
-            tmp_script_path = tmp_script.name
+        with open(notebook_path, 'r', encoding='utf-8') as f:
+            nb = nbformat.read(f, as_version=4)
+        
+        client = NotebookClient(nb, timeout=timeout, kernel_name='python3')
+        
+        # We execute manually to capture results even if it fails
+        client.create_kernel_manager()
+        client.start_new_kernel()
+        client.start_new_kernel_client()
+        
+        executed_cells = []
+        success = True
+        error_msg = None
         
         try:
-            # Use nbconvert to convert notebook to script
-            result = subprocess.run(
-                [
-                    sys.executable,
-                    "-m",
-                    "jupyter",
-                    "nbconvert",
-                    "--to",
-                    "script",
-                    "--output",
-                    tmp_script_path,
-                    str(notebook_path)
-                ],
-                capture_output=True,
-                text=True,
-                timeout=30,
-                check=False
-            )
-            
-            if result.returncode != 0:
-                return {
-                    "success": False,
-                    "exit_code": result.returncode,
-                    "stdout": result.stdout,
-                    "stderr": result.stderr,
-                    "error": "Failed to convert notebook to script",
-                    "traceback": result.stderr,
-                    "duration": time.time() - start_time
-                }
-            
-            # Execute the converted script
-            exec_result = execute_script(tmp_script_path, timeout=timeout)
-            exec_result["duration"] = time.time() - start_time
-            
-            return exec_result
-            
+            for idx, cell in enumerate(nb.cells):
+                if cell.cell_type == 'code':
+                    try:
+                        client.execute_cell(cell, idx)
+                        
+                        outputs = []
+                        for output in cell.outputs:
+                            if output.output_type == 'stream':
+                                outputs.append(output.text)
+                            elif output.output_type == 'error':
+                                outputs.append(f"{output.ename}: {output.evalue}\n" + "".join(output.traceback))
+                                success = False
+                                error_msg = f"{output.ename}: {output.evalue}"
+                            elif output.output_type in ['execute_result', 'display_data']:
+                                if 'text/plain' in output.data:
+                                    outputs.append(output.data['text/plain'])
+                        
+                        executed_cells.append({
+                            "index": idx + 1,
+                            "source": cell.source,
+                            "output": "".join(outputs)
+                        })
+                        
+                        if not success:
+                            break
+                            
+                    except Exception as e:
+                        success = False
+                        error_msg = str(e)
+                        executed_cells.append({
+                            "index": idx + 1,
+                            "source": cell.source,
+                            "output": f"Execution Error: {e}"
+                        })
+                        break
+                else:
+                    # Skip markdown cells for report or include them?
+                    # User asked for ## Cell 1 \n code here... so we focus on code cells
+                    pass
         finally:
-            # Clean up temporary script
-            try:
-                Path(tmp_script_path).unlink()
-            except Exception:
-                pass
+            client.stop_kernel()
+            
+        return {
+            "success": success,
+            "cells": executed_cells,
+            "error": error_msg,
+            "duration": time.time() - start_time
+        }
                 
     except Exception as e:
-        duration = time.time() - start_time
         return {
             "success": False,
-            "exit_code": -1,
-            "stdout": "",
-            "stderr": "",
+            "cells": [],
             "error": str(e),
-            "traceback": traceback.format_exc(),
-            "duration": duration
+            "duration": time.time() - start_time
         }
+
+
+def generate_markdown_report(path: str, result: Dict[str, Any]) -> str:
+    """
+    Generate Markdown report from execution results.
+    """
+    path_obj = Path(path)
+    md = []
+    
+    if path_obj.suffix == '.ipynb':
+        # Jupyter Notebook format
+        for cell in result.get('cells', []):
+            md.append(f"## Cell {cell['index']}")
+            md.append(cell['source'])
+            md.append("## Output")
+            md.append(cell['output'] or "(No output)")
+            md.append("")
+    else:
+        # Python script format
+        md.append("## Python Code")
+        md.append(result.get('source_code', ''))
+        md.append("## Output")
+        
+        stdout = result.get('stdout', '')
+        stderr = result.get('stderr', '')
+        
+        output = []
+        if stdout:
+            output.append(stdout)
+        if stderr:
+            output.append(stderr)
+            
+        md.append("\n".join(output) or "(No output)")
+        md.append("")
+    
+    # Append Environment Info
+    md.append("## Environment Info")
+    env_info = get_full_environment_info()
+    md.append("```json")
+    md.append(json.dumps(env_info, indent=2))
+    md.append("```")
+    
+    return "\n".join(md)
 
 
 def parse_error_traceback(traceback_str: str) -> Dict[str, Any]:
     """
     Parse error traceback to extract structured information.
-    
-    Args:
-        traceback_str: Full traceback string
-        
-    Returns:
-        Dictionary with parsed error information:
-        - error_type: str
-        - error_message: str
-        - file: Optional[str]
-        - line: Optional[int]
-        - function: Optional[str]
-        
-    Example:
-        >>> tb = "Traceback...\\nImportError: No module named 'torch'"
-        >>> info = parse_error_traceback(tb)
-        >>> print(info["error_type"])
-        'ImportError'
     """
     if not traceback_str:
         return {
@@ -289,7 +302,6 @@ def parse_error_traceback(traceback_str: str) -> Dict[str, Any]:
     function_name = None
     
     for line in lines:
-        # Look for lines like: File "/path/to/file.py", line 42, in function_name
         if line.strip().startswith('File "'):
             try:
                 # Extract file path
@@ -327,29 +339,30 @@ def create_error_report(
 ) -> Dict[str, Any]:
     """
     Create comprehensive error report.
-    
-    Args:
-        script_path: Path to executed script
-        execution_result: Result from execute_script or execute_notebook
-        include_environment: Whether to include environment info
-        
-    Returns:
-        Complete error report dictionary
     """
     report: Dict[str, Any] = {
         "script_path": script_path,
         "execution": execution_result
     }
     
+    # Generate markdown report
+    report["markdown"] = generate_markdown_report(script_path, execution_result)
+    
     # Parse traceback if available
     if execution_result.get("traceback"):
         report["parsed_error"] = parse_error_traceback(execution_result["traceback"])
+    elif execution_result.get("error") and not execution_result.get("traceback"):
+        # For notebook errors captured without full traceback
+        report["parsed_error"] = {
+            "error_type": execution_result["error"].split(":")[0] if ":" in execution_result["error"] else "Unknown",
+            "error_message": execution_result["error"],
+            "file": script_path,
+            "line": None,
+            "function": None
+        }
     
     # Include environment info if requested
     if include_environment:
         report["environment"] = get_full_environment_info()
     
     return report
-
-
-# Made with Bob
