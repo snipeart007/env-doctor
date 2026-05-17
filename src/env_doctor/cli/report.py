@@ -166,6 +166,8 @@ def report_incompatibility(
 
 import httpx
 
+from env_doctor.database.repository import RepositoryManager
+
 def _submit_to_watsonx(
     markdown_content: str,
     mock: bool = False
@@ -183,17 +185,21 @@ def _submit_to_watsonx(
         console.print("[dim]Mock mode: Submission skipped, but Markdown was generated successfully.[/dim]")
         return
 
-    # Get proxy URL from environment or configuration
+    # Get proxy URL from environment, configuration, or repository
     config = load_config()
-    # Assuming the user will set this in their config or we have a default
     proxy_url = os.getenv("ENV_DOCTOR_PROXY_URL")
+    
+    if not proxy_url:
+        # Try to discover from repository
+        repo_manager = RepositoryManager(config)
+        proxy_url = repo_manager.get_worker_url()
     
     if not proxy_url:
         console.print(
             Panel(
-                "[yellow]⚠ Secure Proxy URL not configured.[/yellow]\n\n"
+                "[yellow]⚠ Secure Proxy URL not configured or discovered.[/yellow]\n\n"
                 "Please set the [bold]ENV_DOCTOR_PROXY_URL[/bold] environment variable\n"
-                "to your Cloudflare Worker endpoint to enable AI analysis.",
+                "or ensure [bold]worker.txt[/bold] exists in your intelligence repository.",
                 title="Configuration Missing",
                 border_style="yellow"
             )
@@ -201,9 +207,12 @@ def _submit_to_watsonx(
         return
 
     try:
+        # Append /compatibility to the proxy URL
+        submission_url = f"{proxy_url.rstrip('/')}/compatibility"
+        
         with httpx.Client() as client:
             response = client.post(
-                proxy_url,
+                submission_url,
                 json={"markdown": markdown_content},
                 timeout=130.0  # Allow time for Orchestrate analysis
             )

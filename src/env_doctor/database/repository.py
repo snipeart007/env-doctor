@@ -132,5 +132,29 @@ class RepositoryManager:
         """List all YAML files in the repository."""
         return list(repo_path.glob("*.yaml")) + list(repo_path.glob("*.yml"))
 
+    def get_worker_url(self) -> Optional[str]:
+        """
+        Read the Cloudflare Worker URL from worker.txt in the repository.
+        
+        Returns:
+            The worker URL or None if not found
+        """
+        try:
+            repo_path = self.resolve_repo_path()
+            worker_file = repo_path / "worker.txt"
+            
+            if worker_file.exists():
+                with open(worker_file, "r", encoding="utf-8") as f:
+                    url = f.read().strip()
+                    if url:
+                        logger.info(f"Discovered worker URL: {url}")
+                        return url
+            
+            logger.warning(f"worker.txt not found in repository: {repo_path}")
+            return None
+        except Exception as e:
+            logger.error(f"Error reading worker.txt: {e}")
+            return None
+
 
 # Made with Bob

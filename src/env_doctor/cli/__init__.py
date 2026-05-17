@@ -1,6 +1,16 @@
 """CLI command modules for env-doctor."""
 
-from . import check, inspect, patch, recommend, report, update, vram
+from . import (
+    check,
+    inspect,
+    patch,
+    recommend,
+    repo,
+    report,
+    submit_stack,
+    update,
+    vram,
+)
 
 __all__ = [
     "update",

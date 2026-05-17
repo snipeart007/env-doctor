@@ -4,7 +4,17 @@ import typer
 from rich.console import Console
 
 from env_doctor import __version__
-from env_doctor.cli import check, inspect, patch, recommend, report, update, vram, repo
+from env_doctor.cli import (
+    check,
+    inspect,
+    patch,
+    recommend,
+    repo,
+    report,
+    submit_stack,
+    update,
+    vram,
+)
 
 app = typer.Typer(
     name="env-doctor",
@@ -62,6 +72,7 @@ app.command(name="recommend")(recommend.recommend_stack)
 app.command(name="vram")(vram.estimate_vram)
 app.command(name="patch")(patch.patch_dependencies)
 app.command(name="report-incompatibility")(report.report_incompatibility)
+app.command(name="submit-stack")(submit_stack.submit_stack)
 
 
 if __name__ == "__main__":

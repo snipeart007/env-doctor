@@ -94,33 +94,45 @@ class YAMLCompiler:
         """
         Read all YAML files from a local directory.
         
+        Scans for standard files (stable_stacks.yaml, runtime_profiles.yaml) 
+        and all YAML files in the 'compatibility/' directory.
+        
         Args:
             repo_path: Path to the repository directory
             
         Returns:
-            Dictionary mapping filename to YAML content
+            Dictionary mapping relative path to YAML content
         """
         yaml_files: Dict[str, str] = {}
         
-        # List of expected YAML files
-        expected_files = [
+        # 1. Look for standard top-level files
+        standard_files = [
             "compatibility_rules.yaml",
             "stable_stacks.yaml",
             "runtime_profiles.yaml"
         ]
         
-        for filename in expected_files:
+        for filename in standard_files:
             file_path = repo_path / filename
             if file_path.exists():
                 try:
-                    logger.info(f"Reading {filename} from {file_path}")
                     with open(file_path, 'r', encoding='utf-8') as f:
                         yaml_files[filename] = f.read()
-                    logger.info(f"Successfully read {filename}")
                 except Exception as e:
                     logger.error(f"Error reading {filename}: {e}")
-            else:
-                logger.warning(f"File not found: {filename} in {repo_path}")
+        
+        # 2. Look for all YAML files in 'compatibility/' directory
+        compat_dir = repo_path / "compatibility"
+        if compat_dir.exists() and compat_dir.is_dir():
+            for ext in ["*.yaml", "*.yml"]:
+                for file_path in compat_dir.glob(ext):
+                    # Use relative path as key
+                    rel_path = f"compatibility/{file_path.name}"
+                    try:
+                        with open(file_path, 'r', encoding='utf-8') as f:
+                            yaml_files[rel_path] = f.read()
+                    except Exception as e:
+                        logger.error(f"Error reading {rel_path}: {e}")
                 
         return yaml_files
 
@@ -466,15 +478,23 @@ class YAMLCompiler:
                 return stats
             
             # Step 3: Process each file
-            for idx, (filename, content) in enumerate(yaml_files.items(), 1):
+            for idx, (rel_path, content) in enumerate(yaml_files.items(), 1):
                 try:
-                    # Determine file type
-                    file_type = filename.replace(".yaml", "").replace(".yml", "")
+                    # Determine file type based on path/name
+                    if rel_path.startswith("compatibility/") or rel_path == "compatibility_rules.yaml":
+                        file_type = "compatibility_rules"
+                    elif rel_path == "stable_stacks.yaml":
+                        file_type = "stable_stacks"
+                    elif rel_path == "runtime_profiles.yaml":
+                        file_type = "runtime_profiles"
+                    else:
+                        logger.warning(f"Unknown file type for path: {rel_path}")
+                        continue
                     
                     if progress_callback:
-                        progress_callback(f"Processing {filename}", idx, len(yaml_files) + 1)
+                        progress_callback(f"Processing {rel_path}", idx, len(yaml_files) + 1)
                     
-                    logger.info(f"Processing {filename}...")
+                    logger.info(f"Processing {rel_path} (Type: {file_type})...")
                     
                     # Validate YAML structure
                     self.validate_yaml_structure(content, file_type)
@@ -485,18 +505,16 @@ class YAMLCompiler:
                     # Compile based on file type
                     if file_type == "compatibility_rules":
                         count = self.compile_compatibility_rules(yaml_data)
-                        stats["rules_processed"] = count
+                        stats["rules_processed"] += count
                     elif file_type == "stable_stacks":
                         count = self.compile_stable_stacks(yaml_data)
-                        stats["stacks_processed"] = count
+                        stats["stacks_processed"] += count
                     elif file_type == "runtime_profiles":
                         count = self.compile_runtime_profiles(yaml_data)
-                        stats["profiles_processed"] = count
-                    else:
-                        logger.warning(f"Unknown file type: {file_type}")
+                        stats["profiles_processed"] += count
                         
                 except Exception as e:
-                    logger.error(f"Error processing {filename}: {e}")
+                    logger.error(f"Error processing {rel_path}: {e}")
                     stats["errors"] += 1
                     continue
             

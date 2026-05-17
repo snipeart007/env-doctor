@@ -65,7 +65,18 @@ uv run env-doctor vram --model meta-llama/Meta-Llama-3-8B --runtime vllm
 uv run env-doctor vram --model meta-llama/Llama-2-70b-hf --quantization 4bit
 
 --------------------------------------------------------------------------------
-6. DATABASE MANAGEMENT
+6. STACK SUBMISSION
+--------------------------------------------------------------------------------
+
+# Submit your current stable environment as a new stack
+# Automatically detects CUDA, Python, and all installed packages
+uv run env-doctor submit-stack my-verified-config --desc "Standard configuration for H100 dev"
+
+# Submit a specific minimal stack for Linux
+uv run env-doctor submit-stack minimal-torch --cuda 12.1 --platform linux --no-current --package torch==2.3.1 --package transformers==4.40.0 --desc "Minimal LLM inference stack"
+
+--------------------------------------------------------------------------------
+7. DATABASE MANAGEMENT
 --------------------------------------------------------------------------------
 
 # Sync local database with the curated intelligence repository

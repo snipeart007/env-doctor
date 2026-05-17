@@ -177,15 +177,44 @@ class TestRecommendCommand:
 class TestVRAMCommand:
     """Test vram command."""
     
-    def test_vram_estimation(self):
+    @patch('env_doctor.cli.vram.ModelFetcher')
+    def test_vram_estimation(self, mock_fetcher):
         """Test VRAM estimation."""
+        # Mock model architecture
+        mock_arch = Mock()
+        mock_arch.model_id = "gpt2"
+        mock_arch.model_type = "gpt2"
+        mock_arch.param_count = 124000000
+        mock_arch.hidden_size = 768
+        mock_arch.num_layers = 12
+        mock_arch.vocab_size = 50257
+        mock_arch.num_heads = 12
+        mock_arch.intermediate_size = 3072
+        
+        mock_fetcher_instance = mock_fetcher.return_value
+        mock_fetcher_instance.fetch_model_info.return_value = mock_arch
+        mock_fetcher_instance.fetch_model_info_from_file.return_value = None
+
         result = runner.invoke(app, ["vram", "--model", "gpt2"])
         
         assert result.exit_code == 0
         assert "VRAM" in result.stdout or "Estimating" in result.stdout
     
-    def test_vram_with_quantization(self):
+    @patch('env_doctor.cli.vram.ModelFetcher')
+    def test_vram_with_quantization(self, mock_fetcher):
         """Test VRAM estimation with quantization."""
+        mock_arch = Mock()
+        mock_arch.model_id = "gpt2"
+        mock_arch.param_count = 124000000
+        mock_arch.num_layers = 12
+        mock_arch.vocab_size = 50257
+        mock_arch.hidden_size = 768
+        mock_arch.model_type = "gpt2"
+        
+        mock_fetcher_instance = mock_fetcher.return_value
+        mock_fetcher_instance.fetch_model_info.return_value = mock_arch
+        mock_fetcher_instance.fetch_model_info_from_file.return_value = None
+
         result = runner.invoke(app, ["vram", "--model", "gpt2", "--quant", "int8"])
         
         assert result.exit_code == 0
@@ -277,6 +306,35 @@ class TestReportCommand:
         assert "Execute script" in result.stdout
 
 
+class TestSubmitStackCommand:
+    """Test submit-stack command."""
+    
+    def test_submit_stack_help(self):
+        """Test submit-stack --help."""
+        result = runner.invoke(app, ["submit-stack", "--help"])
+        assert result.exit_code == 0
+        assert "Submit a verified stable stack" in result.stdout
+
+    @patch('env_doctor.cli.submit_stack.httpx.Client')
+    @patch('env_doctor.cli.submit_stack.RepositoryManager')
+    def test_submit_stack_basic(self, mock_repo, mock_httpx):
+        """Test basic submit-stack command."""
+        # Mock repository manager to return worker URL
+        mock_repo_instance = Mock()
+        mock_repo_instance.get_worker_url.return_value = "https://mock-worker.dev"
+        mock_repo.return_value = mock_repo_instance
+        
+        # Mock httpx response
+        mock_response = Mock()
+        mock_httpx.return_value.__enter__.return_value.post.return_value = mock_response
+        mock_response.status_code = 200
+        
+        result = runner.invoke(app, ["submit-stack", "test-stack", "--desc", "Test description", "--no-current", "--package", "torch==2.1.0"])
+        
+        assert result.exit_code == 0
+        assert "registered" in result.stdout
+
+
 class TestIntegration:
     """Integration tests for CLI."""
     
@@ -289,7 +347,8 @@ class TestIntegration:
             "recommend",
             "vram",
             "patch",
-            "report-incompatibility"
+            "report-incompatibility",
+            "submit-stack"
         ]
         
         for cmd in commands:

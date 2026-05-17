@@ -33,10 +33,10 @@ env-doctor check cuda
 env-doctor check frameworks
 
 # Analyze VRAM usage
-env-doctor vram analyze
+env-doctor vram --model meta-llama/Llama-3-8B
 
-# Generate a report
-env-doctor report
+# Submit a verified stable stack
+env-doctor submit-stack my-stable-config --desc "Optimized for training"
 ```
 
 ## Requirements
