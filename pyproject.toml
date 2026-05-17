@@ -7,7 +7,7 @@ name = "env-doctor-pypi"
 version = "0.1.0.1"
 description = "AI development environment diagnostic and optimization tool"
 readme = "README.md"
-requires-python = ">=3.11, <3.13"
+requires-python = ">=3.11"
 license = "AGPL-3.0"
 authors = [
     { name = "env-doctor contributors" }
