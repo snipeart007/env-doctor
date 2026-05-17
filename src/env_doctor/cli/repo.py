@@ -24,7 +24,7 @@ def set_repo(
     Set the active intelligence repository source.
     
     Examples:
-        env-doctor repo set env-doctor/env-doctor-db
+        env-doctor repo set snipeart007/env-doctor-db
         env-doctor repo set https://github.com/my-org/custom-rules.git --branch dev
         env-doctor repo set C:/Users/name/projects/my-local-rules
     """

@@ -30,7 +30,7 @@ class Config(BaseModel):
         description="Logging verbosity: debug, info, warning, error"
     )
     github_repo: str = Field(
-        default="env-doctor/env-doctor-db",
+        default="snipeart007/env-doctor-db",
         description="GitHub repository for database updates (deprecated, use repo_source)"
     )
     github_branch: str = Field(
@@ -76,7 +76,7 @@ class Config(BaseModel):
     
     # GitHub PR configuration
     github_pr_repo: str = Field(
-        default="env-doctor/env-doctor-db",
+        default="snipeart007/env-doctor-db",
         description="GitHub repository for PR submissions"
     )
     github_pr_base_branch: str = Field(

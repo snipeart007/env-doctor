@@ -10,7 +10,7 @@ This guide explains how to set up a Watsonx Orchestrate agent to handle incompat
 ## 2. MCP Server Configuration
 The `env-doctor` MCP server provides the `update_compatibility_database` tool. Ensure it is configured with the following environment variables:
 - `GITHUB_API_KEY`: Your GitHub token.
-- `GITHUB_REPOSITORY`: The target repository (e.g., `env-doctor/env-doctor-db`).
+- `GITHUB_REPOSITORY`: The target repository (e.g., `snipeart007/env-doctor-db`).
 
 ## 3. Watsonx Agent System Prompt
 

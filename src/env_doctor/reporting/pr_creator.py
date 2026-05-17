@@ -20,7 +20,7 @@ class GitHubConfig(BaseModel):
         description="GitHub personal access token"
     )
     repository: str = Field(
-        default="env-doctor/env-doctor-db",
+        default="snipeart007/env-doctor-db",
         description="Target repository (owner/repo)"
     )
     base_branch: str = Field(
