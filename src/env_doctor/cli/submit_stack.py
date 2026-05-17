@@ -89,7 +89,7 @@ def submit_stack(
             "cuda_version": cuda_version,
             "env_system": env_system,
             "python_version": python_version,
-            "confidence_level": confidence,
+            "confidence": confidence,
             "description": description,
             "packages": stack_packages
         }
