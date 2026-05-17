@@ -57,6 +57,16 @@ def update_db(
         # Initialize Repository Manager
         repo_manager = RepositoryManager(config)
         
+        # Discover and update worker URL from repo
+        worker_url = repo_manager.get_worker_url()
+        if worker_url:
+            from env_doctor.utils.config import save_config
+            if config.worker_url != worker_url:
+                config.worker_url = worker_url
+                save_config(config)
+                if verbose:
+                    console.print(f"[dim]✓ Synchronized worker URL: {worker_url}[/dim]")
+        
         # Initialize YAML compiler
         compiler = YAMLCompiler(db_manager, repo_manager=repo_manager)
         

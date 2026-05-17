@@ -6,8 +6,8 @@
 		"enabled": true
 	},
 	"vars": {
-		"INSTANCE_URL": "REPLACE_WITH_YOUR_WATSONX_URL",
-		"AGENT_ID": "REPLACE_WITH_YOUR_AGENT_ID",
+		"INSTANCE_URL": "https://api.ca-tor.watson-orchestrate.cloud.ibm.com/instances/aa1cf4d9-2f08-4a98-bc1d-32de73ec7f45",
+		"AGENT_ID": "f2e45014-a8ed-46f2-ab17-a57e9b7f46f1",
 		"GITHUB_REPOSITORY": "snipeart007/env-doctor-db"
 	}
 }

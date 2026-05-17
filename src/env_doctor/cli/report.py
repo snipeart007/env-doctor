@@ -5,6 +5,7 @@ Executes scripts/notebooks and reports incompatibilities to Watsonx Orchestrate.
 """
 
 import json
+import os
 from pathlib import Path
 from typing import Optional
 
@@ -167,6 +168,7 @@ def report_incompatibility(
 import httpx
 
 from env_doctor.database.repository import RepositoryManager
+from env_doctor.utils.config import load_config
 
 def _submit_to_watsonx(
     markdown_content: str,
@@ -187,7 +189,7 @@ def _submit_to_watsonx(
 
     # Get proxy URL from environment, configuration, or repository
     config = load_config()
-    proxy_url = os.getenv("ENV_DOCTOR_PROXY_URL")
+    proxy_url = os.getenv("ENV_DOCTOR_PROXY_URL") or config.worker_url
     
     if not proxy_url:
         # Try to discover from repository

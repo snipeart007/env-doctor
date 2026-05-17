@@ -111,10 +111,8 @@ async function handleCompatibility(request: Request, env: Env): Promise<Response
 				"content": reportContent,
 			},
 			"agent_id": env.AGENT_ID,
-			"thread_id": "",
-		}),
-	});
-
+			}),
+			});
 	const responseHeaders = new Headers(orchestrateResponse.headers);
 	responseHeaders.set("Access-Control-Allow-Origin", "*");
 

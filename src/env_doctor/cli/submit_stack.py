@@ -96,7 +96,7 @@ def submit_stack(
 
         # 4. Discover Worker URL
         config = load_config()
-        proxy_url = os.getenv("ENV_DOCTOR_PROXY_URL")
+        proxy_url = os.getenv("ENV_DOCTOR_PROXY_URL") or config.worker_url
         
         if not proxy_url:
             repo_manager = RepositoryManager(config)

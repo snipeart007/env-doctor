@@ -83,6 +83,10 @@ class Config(BaseModel):
         default="main",
         description="Base branch for pull requests"
     )
+    worker_url: Optional[str] = Field(
+        default=None,
+        description="URL for the secure proxy worker"
+    )
     
     @classmethod
     def get_config_path(cls) -> Path:
@@ -176,6 +180,8 @@ class Config(BaseModel):
         toml_content += '\n# GitHub PR configuration\n'
         toml_content += f'github_pr_repo = "{config.github_pr_repo}"\n'
         toml_content += f'github_pr_base_branch = "{config.github_pr_base_branch}"\n'
+        if config.worker_url:
+            toml_content += f'worker_url = "{config.worker_url}"\n'
         
         # Write to file
         with open(config_path, 'w', encoding='utf-8') as f:

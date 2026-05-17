@@ -45,6 +45,28 @@ def set_repo(
     )
 
 
+@app.command(name="set-worker")
+def set_worker(url: str = typer.Argument(..., help="Cloudflare Worker URL")) -> None:
+    """
+    Manually set the secure proxy worker URL.
+    
+    Note: This will be overwritten by 'update-db' if a worker.txt 
+    file is found in the repository.
+    """
+    config = load_config()
+    config.worker_url = url
+    save_config(config)
+    
+    console.print(
+        Panel(
+            f"Worker URL updated to: [bold cyan]{url}[/bold cyan]\n\n"
+            "[dim]Note: This may be overwritten by 'update-db' if the repo contains a worker.txt.[/dim]",
+            title="✓ Success",
+            border_style="green"
+        )
+    )
+
+
 @app.command(name="show")
 def show_repo() -> None:
     """Show current repository configuration."""
@@ -56,6 +78,7 @@ def show_repo() -> None:
     
     table.add_row("Source", config.repo_source)
     table.add_row("Branch", config.github_branch)
+    table.add_row("Worker URL", config.worker_url or "Not set")
     table.add_row("Cache Dir", str(config.get_expanded_repo_cache_dir()))
     
     console.print(table)
