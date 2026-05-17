@@ -38,7 +38,7 @@ class Config(BaseModel):
         description="GitHub branch to fetch from"
     )
     repo_source: str = Field(
-        default="env-doctor/env-doctor-db",
+        default="snipeart007/env-doctor-db",
         description="Source for database repository (Git URL, local path, or owner/repo)"
     )
     update_check_interval: int = Field(
