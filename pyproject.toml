@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "AI development environment diagnostic and optimization tool"
 readme = "README.md"
 requires-python = ">=3.11, <3.13"
-license = { text = "MIT" }
+license = "AGPL-3.0"
 authors = [
     { name = "env-doctor contributors" }
 ]
@@ -16,7 +16,7 @@ keywords = ["ai", "ml", "environment", "diagnostics", "optimization"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: GNU Affero General Public License v3",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -58,8 +58,20 @@ Documentation = "https://github.com/yourusername/env-doctor#readme"
 Repository = "https://github.com/yourusername/env-doctor"
 Issues = "https://github.com/yourusername/env-doctor/issues"
 
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+    "/tests",
+    "/LICENSE",
+]
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/env_doctor"]
+include = [
+    "/src/env_doctor",
+    "/tests",
+    "/LICENSE",
+]
 
 [tool.ruff]
 line-length = 100
