@@ -46,6 +46,7 @@ dev = [
     "ruff>=0.1.0",
     "mypy>=1.5.0",
     "pre-commit>=3.4.0",
+    "ibm-watsonx-orchestrate>=2.9.0",
 ]
 
 [project.scripts]
@@ -112,9 +113,4 @@ addopts = [
     "--strict-config",
     "--cov=env_doctor",
     "--cov-report=term-missing",
-]
-
-[dependency-groups]
-dev = [
-    "ibm-watsonx-orchestrate>=2.9.0",
 ]
