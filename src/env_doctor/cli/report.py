@@ -164,29 +164,66 @@ def report_incompatibility(
         raise typer.Exit(code=1)
 
 
+import httpx
+
 def _submit_to_watsonx(
     markdown_content: str,
     mock: bool = False
 ) -> None:
     """
-    Submit Markdown report to Watsonx Orchestrate.
+    Submit Markdown report to Watsonx Orchestrate via Secure Proxy.
     
     Args:
         markdown_content: The formatted Markdown report
         mock: Use mock mode for testing
     """
-    console.print("[bold blue]Submitting report to Watsonx Orchestrate...[/bold blue]")
+    console.print("[bold blue]Submitting report for AI analysis...[/bold blue]")
     
     if mock:
         console.print("[dim]Mock mode: Submission skipped, but Markdown was generated successfully.[/dim]")
-        # We could save it to a temp file in mock mode to simulate "sending"
         return
 
-    # TODO: Implement Watsonx Orchestrate endpoint call
-    # This will involve:
-    # 1. Loading WATSONX_ORCHESTRATE_URL and API keys from environment
-    # 2. Constructing the request payload with the markdown_content
-    # 3. Handling the async/sync response from Orchestrate
+    # Get proxy URL from environment or configuration
+    config = load_config()
+    # Assuming the user will set this in their config or we have a default
+    proxy_url = os.getenv("ENV_DOCTOR_PROXY_URL")
     
-    console.print("[yellow]Note: Watsonx Orchestrate integration is currently a placeholder.[/yellow]")
-    console.print("[dim]Markdown payload size: {} bytes[/dim]".format(len(markdown_content)))
+    if not proxy_url:
+        console.print(
+            Panel(
+                "[yellow]⚠ Secure Proxy URL not configured.[/yellow]\n\n"
+                "Please set the [bold]ENV_DOCTOR_PROXY_URL[/bold] environment variable\n"
+                "to your Cloudflare Worker endpoint to enable AI analysis.",
+                title="Configuration Missing",
+                border_style="yellow"
+            )
+        )
+        return
+
+    try:
+        with httpx.Client() as client:
+            response = client.post(
+                proxy_url,
+                json={"markdown": markdown_content},
+                timeout=130.0  # Allow time for Orchestrate analysis
+            )
+            
+            if response.status_code == 200:
+                console.print("[bold green]✓ Report submitted successfully![/bold green]")
+                console.print("[dim]The analysis results will be processed by the community database team.[/dim]")
+                
+                # If the response contains data, we could show it
+                if response.text and "content" in response.text:
+                    try:
+                        data = response.json()
+                        # Extract analysis summary if available in the stream/response
+                        console.print("\n[bold]AI Analysis Preview:[/bold]")
+                        console.print(data.get("content", "Analysis in progress..."))
+                    except:
+                        pass
+            else:
+                console.print(f"[bold red]✗ Submission failed:[/bold red] {response.status_code}")
+                console.print(f"[dim]{response.text}[/dim]")
+                
+    except Exception as e:
+        console.print(f"[bold red]✗ Error connecting to proxy:[/bold red] {e}")

@@ -1,22 +1,3 @@
-# Watsonx Orchestrate Setup Guide for env-doctor
-
-This guide explains how to set up a Watsonx Orchestrate agent to handle incompatibility reports from the `env-doctor` CLI and update the GitHub compatibility database using the provided MCP server.
-
-## 1. Prerequisites
-- A Watsonx Orchestrate account.
-- A GitHub Personal Access Token (classic or fine-grained) with `repo` or `contents:write` permissions.
-- The `env-doctor` MCP server running and accessible (or imported as a skill).
-
-## 2. MCP Server Configuration
-The `env-doctor` MCP server provides the `update_compatibility_database` tool. Ensure it is configured with the following environment variables:
-- `GITHUB_API_KEY`: Your GitHub token.
-- `GITHUB_REPOSITORY`: The target repository (e.g., `env-doctor/env-doctor-db`).
-
-## 3. Watsonx Agent System Prompt
-
-Copy and paste the following prompt into your Watsonx Orchestrate agent's "System Instructions":
-
-```markdown
 You are the **env-doctor Incompatibility Analyzer**. Your role is to process Markdown-formatted error reports from users and determine if they represent a genuine package or environment incompatibility.
 
 ### Input Format
@@ -64,13 +45,3 @@ The user will provide a Markdown report containing:
 - **Task Execution Only**: Your ONLY valid outputs are the rejection message (if verification fails) or the tool call (if verification passes).
 - **No Follow-ups**: NEVER ask the user for more information or clarification. If the input is insufficient to verify an incompatibility, reject it immediately.
 - **Finality**: Once the tool is called or the rejection is issued, the task is complete. Do not provide any further text.
-```
-
-## 4. Connecting the CLI
-Once the agent is set up, ensure the `env-doctor` CLI is configured to point to your Watsonx Orchestrate endpoint.
-
-For now, you can test the report generation locally using:
-```bash
-env-doctor report-incompatibility reproduce_bug.py --save report.md --no-submit
-```
-Then, manually paste the content of `report.md` into your Watsonx Orchestrate agent to verify the analysis and database update.

@@ -1,0 +1,9 @@
+# --- Incompatible: Modern Torch with Old CUDA ---
+# Needs CUDA 12.4+, but we'll test with 12.1
+torch==2.12.0
+vllm==0.21.0
+flash-attn==2.7.0
+
+# --- Incompatible: New Scikit with Old NumPy ---
+scikit-learn==1.6.0
+numpy==1.26.4

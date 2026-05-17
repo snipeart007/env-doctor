@@ -18,7 +18,7 @@ from mcp.server.fastmcp import FastMCP
 # Initialize FastMCP server
 mcp = FastMCP("env-doctor-server")
 
-GITHUB_REPO = os.getenv("GITHUB_REPOSITORY", "env-doctor/env-doctor-db")
+GITHUB_REPO = os.getenv("GITHUB_REPOSITORY")
 GITHUB_TOKEN = os.getenv("GITHUB_API_KEY") or os.getenv("GITHUB_TOKEN")
 
 
@@ -31,7 +31,9 @@ async def update_compatibility_database(
     rule_type: str,
     severity: int,
     description: str,
-    fix_suggestion: str
+    fix_suggestion: str,
+    cuda_version: Optional[str] = None,
+    env_system: Optional[str] = None
 ) -> str:
     """
     Add a new compatibility rule to the GitHub repository.
@@ -46,6 +48,8 @@ async def update_compatibility_database(
         severity: Severity score from 0 to 100.
         description: Detailed description of the incompatibility.
         fix_suggestion: Suggested resolution or fix.
+        cuda_version: Optional CUDA version or range (e.g., '12.1', '<12.4').
+        env_system: Optional environment/platform info (e.g., 'linux', 'win32').
     """
     if not GITHUB_TOKEN:
         return "Error: GITHUB_API_KEY or GITHUB_TOKEN environment variable not set."
@@ -57,6 +61,8 @@ async def update_compatibility_database(
             "version_range": package_version_range,
             "dependency": dependency,
             "dependency_range": dependency_version_range,
+            "cuda_version": cuda_version,
+            "env_system": env_system,
             "type": rule_type,
             "confidence": "community-tested",
             "severity": severity,

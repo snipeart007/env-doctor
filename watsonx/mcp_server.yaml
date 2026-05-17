@@ -1,0 +1,11 @@
+spec_version: v1
+kind: mcp
+name: env-doctor-toolkit
+description: MCP server to manage the env-doctor-db databse on GitHub
+command: python server.py
+env: []
+tools:
+  - update_compatibility_database
+connections:
+  - my_connection
+package_root: ./mcp_server # <-- This is the folder containing your mcp server. The path is relative to this file.

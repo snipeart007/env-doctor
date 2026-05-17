@@ -33,6 +33,8 @@ class CompatibilityRuleYAML(BaseModel):
     version_range: str = Field(description="Package version range")
     dependency: str = Field(description="Dependency package name")
     dependency_range: str = Field(description="Dependency version range")
+    cuda_version: Optional[str] = Field(default=None, description="Target CUDA version")
+    env_system: Optional[str] = Field(default=None, description="Environment/OS info")
     type: str = Field(description="Compatibility type")
     confidence: str = Field(description="Confidence level")
     severity: int = Field(ge=0, le=100, description="Severity score")
@@ -52,6 +54,7 @@ class StableStackYAML(BaseModel):
     
     name: str = Field(description="Stack name")
     cuda_version: Optional[str] = Field(default=None, description="CUDA version")
+    env_system: Optional[str] = Field(default=None, description="Environment/OS info")
     python_version: str = Field(description="Python version requirement")
     confidence: str = Field(description="Confidence level")
     description: str = Field(description="Stack description")
@@ -199,7 +202,9 @@ class YAMLCompiler:
                         rule.package,
                         rule.version_range,
                         rule.dependency,
-                        rule.dependency_range
+                        rule.dependency_range,
+                        cuda_ver=rule.cuda_version,
+                        env_sys=rule.env_system
                     )
                     
                     # Check if rule already exists
@@ -211,6 +216,8 @@ class YAMLCompiler:
                         existing_rule.package_version_range = rule.version_range
                         existing_rule.dependency_name = rule.dependency
                         existing_rule.dependency_version_range = rule.dependency_range
+                        existing_rule.cuda_version = rule.cuda_version
+                        existing_rule.env_system = rule.env_system
                         existing_rule.compatibility_type = rule.type
                         existing_rule.confidence_level = rule.confidence
                         existing_rule.severity = rule.severity
@@ -225,6 +232,8 @@ class YAMLCompiler:
                             package_version_range=rule.version_range,
                             dependency_name=rule.dependency,
                             dependency_version_range=rule.dependency_range,
+                            cuda_version=rule.cuda_version,
+                            env_system=rule.env_system,
                             compatibility_type=rule.type,
                             confidence_level=rule.confidence,
                             severity=rule.severity,
@@ -271,7 +280,9 @@ class YAMLCompiler:
                     stack = StableStackYAML(**stack_data)
                     
                     # Generate UID for stack
-                    stack_uid = generate_stack_uid(stack.name, stack.cuda_version)
+                    stack_uid = generate_stack_uid(
+                        stack.name, stack.cuda_version, env_sys=stack.env_system
+                    )
                     
                     # Check if stack already exists
                     existing_stack = session.get(StableStack, stack_uid)
@@ -280,6 +291,7 @@ class YAMLCompiler:
                         # Update existing stack
                         existing_stack.name = stack.name
                         existing_stack.cuda_version = stack.cuda_version
+                        existing_stack.env_system = stack.env_system
                         existing_stack.python_version = stack.python_version
                         existing_stack.confidence_level = stack.confidence
                         existing_stack.description = stack.description
@@ -299,6 +311,7 @@ class YAMLCompiler:
                             uid=stack_uid,
                             name=stack.name,
                             cuda_version=stack.cuda_version,
+                            env_system=stack.env_system,
                             python_version=stack.python_version,
                             confidence_level=stack.confidence,
                             description=stack.description
@@ -315,6 +328,7 @@ class YAMLCompiler:
                             pkg = pkg_data
                         
                         # Generate UID for stack package
+                        # Using generate_compatibility_uid as a proxy for stack packages
                         pkg_uid = generate_compatibility_uid(
                             stack.name,
                             pkg.name,

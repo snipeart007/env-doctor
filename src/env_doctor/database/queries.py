@@ -33,14 +33,20 @@ class CompatibilityQueries:
         version1: str,
         package2: str,
         version2: str,
+        cuda_version: Optional[str] = None,
+        env_system: Optional[str] = None,
         session: Optional[Session] = None
     ) -> List[CompatibilityRule]:
         """Find incompatibilities between two packages."""
         if session:
-            return self._find_incompatibilities(session, package1, version1, package2, version2)
+            return self._find_incompatibilities(
+                session, package1, version1, package2, version2, cuda_version, env_system
+            )
         
         with self.db_manager.get_session() as session:
-            return self._find_incompatibilities(session, package1, version1, package2, version2)
+            return self._find_incompatibilities(
+                session, package1, version1, package2, version2, cuda_version, env_system
+            )
 
     def _find_incompatibilities(
         self,
@@ -48,37 +54,65 @@ class CompatibilityQueries:
         package1: str,
         version1: str,
         package2: str,
-        version2: str
+        version2: str,
+        cuda_version: Optional[str] = None,
+        env_system: Optional[str] = None
     ) -> List[CompatibilityRule]:
         from env_doctor.core.version_matcher import VersionMatcher
+        matcher = VersionMatcher()
         
-        # Query for rules where package1 conflicts with package2
-        stmt = select(CompatibilityRule).where(
+        # Query for rules between these two packages
+        # Fetching all rules between these two packages and then filtering in Python
+        # to correctly handle version ranges for cuda_version
+        
+        # Direction 1: package1 -> package2
+        stmt1 = select(CompatibilityRule).where(
             CompatibilityRule.package_name == package1.lower(),
             CompatibilityRule.dependency_name == package2.lower()
         )
-        candidates1 = list(session.exec(stmt).all())
+        candidates1 = list(session.exec(stmt1).all())
         
-        # Query for rules where package2 conflicts with package1
-        stmt = select(CompatibilityRule).where(
+        # Direction 2: package2 -> package1
+        stmt2 = select(CompatibilityRule).where(
             CompatibilityRule.package_name == package2.lower(),
             CompatibilityRule.dependency_name == package1.lower()
         )
-        candidates2 = list(session.exec(stmt).all())
+        candidates2 = list(session.exec(stmt2).all())
         
         all_candidates = candidates1 + candidates2
         matching_rules = []
         
         for rule in all_candidates:
-            # Determine which input package matches the rule's primary package
+            # 1. Filter by Platform (env_system)
+            if env_system and rule.env_system:
+                if env_system.lower() != rule.env_system.lower():
+                    continue
+                    
+            # 2. Filter by CUDA version
+            if cuda_version and rule.cuda_version:
+                # Use VersionMatcher to check if system CUDA matches rule range
+                try:
+                    if not matcher.version_matches(cuda_version, rule.cuda_version):
+                        continue
+                except Exception:
+                    # Fallback to exact match if not a valid specifier
+                    if cuda_version != rule.cuda_version:
+                        continue
+            elif rule.cuda_version and not cuda_version:
+                # Rule requires a specific CUDA version, but none provided/detected
+                # We skip it for now to avoid false positives, or should we include it as a warning?
+                # For now, if no CUDA is present, we ignore CUDA-specific rules.
+                continue
+
+            # 3. Match package versions
             if rule.package_name == package1.lower():
                 v1, v2 = version1, version2
             else:
                 v1, v2 = version2, version1
                 
             # Check if version ranges/specs overlap with rule ranges
-            m1 = self._matches(v1, rule.package_version_range, VersionMatcher)
-            m2 = self._matches(v2, rule.dependency_version_range, VersionMatcher)
+            m1 = self._matches(v1, rule.package_version_range, matcher)
+            m2 = self._matches(v2, rule.dependency_version_range, matcher)
             
             if m1 and m2:
                 matching_rules.append(rule)
@@ -144,6 +178,13 @@ class StackQueries:
             stmt = stmt.where(
                 (StableStack.cuda_version == cuda_version) |
                 (StableStack.cuda_version == None)  # noqa: E711
+            )
+            
+        # Platform/env_system filtering
+        if platform:
+            stmt = stmt.where(
+                (StableStack.env_system == platform) |
+                (StableStack.env_system == None)
             )
         
         stacks = list(session.exec(stmt).all())

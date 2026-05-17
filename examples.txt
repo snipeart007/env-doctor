@@ -1,0 +1,77 @@
+================================================================================
+env-doctor — CLI Showcase & Usage Guide
+================================================================================
+
+This file showcases various commands to diagnose and optimize your ML environment.
+Assumes the database has been updated with 'uv run env-doctor update-db'.
+
+--------------------------------------------------------------------------------
+1. COMPATIBILITY CHECKING
+--------------------------------------------------------------------------------
+
+# Check a requirements file against the current system
+uv run env-doctor check examples/compatible_requirements.txt
+
+# Simulate checking for a Linux production cluster with CUDA 12.4
+uv run env-doctor check examples/incompatible_requirements.txt --cuda 12.4 --platform linux
+
+# Detect incompatibilities in a pyproject.toml for a Windows workstation with older CUDA
+uv run env-doctor check examples/incompatible_pyproject.toml --cuda 12.1 --platform win32
+
+# Detailed verbose output including rule UIDs
+uv run env-doctor check examples/incompatible_requirements.txt -v
+
+--------------------------------------------------------------------------------
+2. STACK RECOMMENDATIONS
+--------------------------------------------------------------------------------
+
+# Get a recommendation for a new project using Transformers and TRL on Linux
+uv run env-doctor recommend --package transformers --package trl --platform linux
+
+# Find the best stack for a Windows machine with CUDA 12.1
+uv run env-doctor recommend --cuda 12.1 --platform win32
+
+# Non-interactive recommendation with minimum confidence threshold
+uv run env-doctor recommend --package vllm --confidence production-tested --no-interactive
+
+--------------------------------------------------------------------------------
+3. ENVIRONMENT INSPECTION
+--------------------------------------------------------------------------------
+
+# Display current hardware and software status in a table
+uv run env-doctor inspect
+
+# Export full environment state to JSON for remote debugging
+uv run env-doctor inspect --format json --save my_env.json
+
+--------------------------------------------------------------------------------
+4. DEPENDENCY PATCHING
+--------------------------------------------------------------------------------
+
+# Preview fixes for an incompatible requirements file
+uv run env-doctor patch examples/incompatible_requirements.txt --dry-run
+
+# Apply patches with an automatic backup
+uv run env-doctor patch examples/incompatible_requirements.txt
+
+--------------------------------------------------------------------------------
+5. VRAM ESTIMATION
+--------------------------------------------------------------------------------
+
+# Estimate VRAM for Llama-3-8B using vLLM runtime
+uv run env-doctor vram --model meta-llama/Meta-Llama-3-8B --runtime vllm
+
+# Check if a 70B model fits on a single A100 (80GB) with 4-bit quantization
+uv run env-doctor vram --model meta-llama/Llama-2-70b-hf --quantization 4bit
+
+--------------------------------------------------------------------------------
+6. DATABASE MANAGEMENT
+--------------------------------------------------------------------------------
+
+# Sync local database with the curated intelligence repository
+uv run env-doctor update-db
+
+# Point to a custom local repository for private company rules
+uv run env-doctor repo set C:/path/to/my-private-rules
+uv run env-doctor update-db
+================================================================================

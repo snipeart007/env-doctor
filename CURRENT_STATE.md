@@ -17,10 +17,10 @@
 
 ### Usable Components
 - **Core CLI Engine**: Typer-based interface with Rich UI components.
-- **Database Schema**: SQLite implementation with 8 core tables (Packages, Versions, Dependencies, Rules, Stacks, etc.).
-- **Compatibility Engine**: Version range matching and severity scoring logic.
+- **Database Schema**: SQLite implementation with 8 core tables, extended to support `cuda_version` and `env_system` for platform-specific intelligence.
+- **Compatibility Engine**: Version range matching, platform-aware conflict detection, and severity scoring logic.
 - **Reporting System**: Markdown-based report generator with cell-by-cell notebook execution.
-- **MCP Server**: FastMCP server with tools to update the GitHub compatibility database.
+- **MCP Server**: FastMCP server with tools to update the GitHub compatibility database, supporting new schema fields.
 
 ### Current Blockers & Technical Debt
 1.  **SQLAlchemy Session Management**: The `patch` command fails because database objects are accessed after the session has closed.

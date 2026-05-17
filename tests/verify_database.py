@@ -41,8 +41,12 @@ def verify_imports() -> None:
         pkg_uid = generate_package_uid("torch")
         ver_uid = generate_version_uid("torch", "2.1.0")
         dep_uid = generate_dependency_uid("torch", "2.1.0", "numpy")
-        compat_uid = generate_compatibility_uid("torch", ">=2.0", "transformers", ">=4.30")
-        stack_uid = generate_stack_uid("torch-2.1-transformers-4.38", "11.8")
+        compat_uid = generate_compatibility_uid(
+            "torch", ">=2.0", "transformers", ">=4.30", cuda_ver="12.1", env_sys="win32"
+        )
+        stack_uid = generate_stack_uid(
+            "torch-2.1-transformers-4.38", "11.8", env_sys="linux"
+        )
         wheel_uid = generate_wheel_uid("torch", "2.1.0", "cp310", "win_amd64")
         runtime_uid = generate_runtime_uid("transformers")
         

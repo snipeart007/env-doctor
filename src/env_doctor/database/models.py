@@ -90,6 +90,8 @@ class CompatibilityRule(SQLModel, table=True):
     package_version_range: str = Field(description="Package version range (e.g., '>=2.0,<2.2')")
     dependency_name: str = Field(index=True, description="Dependency package name")
     dependency_version_range: str = Field(description="Dependency version range")
+    cuda_version: Optional[str] = Field(default=None, description="Target CUDA version (e.g., '12.1')")
+    env_system: Optional[str] = Field(default=None, description="Operating system or environment info")
     compatibility_type: str = Field(
         description="Type: compatible/incompatible/partial/runtime-risk/untested"
     )
@@ -114,6 +116,7 @@ class StableStack(SQLModel, table=True):
     uid: str = Field(primary_key=True, max_length=16, description="SHA-256 hash of stack")
     name: str = Field(unique=True, description="Stack name (e.g., 'torch-2.1-transformers-4.38')")
     cuda_version: Optional[str] = Field(default=None, description="CUDA version (e.g., '11.8')")
+    env_system: Optional[str] = Field(default=None, description="Operating system or environment info")
     python_version: str = Field(description="Python version (e.g., '3.10')")
     confidence_level: str = Field(
         description="Confidence: production-tested/stable/community-tested/experimental"

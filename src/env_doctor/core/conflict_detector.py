@@ -124,7 +124,9 @@ class ConflictDetector:
     
     def detect_runtime_conflicts(
         self,
-        dependencies: List[Dict]
+        dependencies: List[Dict],
+        cuda_version: Optional[str] = None,
+        env_system: Optional[str] = None
     ) -> List[Issue]:
         """
         Detect runtime conflicts from compatibility rules.
@@ -135,6 +137,8 @@ class ConflictDetector:
             dependencies: List of dependency dictionaries with:
                 - package_name: str
                 - version: str
+            cuda_version: Optional system CUDA version
+            env_system: Optional system environment info
         
         Returns:
             List of Issue objects for runtime conflicts
@@ -155,6 +159,19 @@ class ConflictDetector:
                 statement = select(CompatibilityRule).where(
                     CompatibilityRule.package_name == pkg_name
                 )
+                
+                # Add optional filters
+                if cuda_version:
+                    statement = statement.where(
+                        (CompatibilityRule.cuda_version == cuda_version) |
+                        (CompatibilityRule.cuda_version == None)
+                    )
+                if env_system:
+                    statement = statement.where(
+                        (CompatibilityRule.env_system == env_system) |
+                        (CompatibilityRule.env_system == None)
+                    )
+                    
                 rules = session.exec(statement).all()
                 
                 for rule in rules:
@@ -325,6 +342,7 @@ class ConflictDetector:
         self,
         dependencies: List[Dict],
         cuda_version: Optional[str] = None,
+        env_system: Optional[str] = None,
         python_version: Optional[str] = None
     ) -> Dict[str, List[Issue]]:
         """
@@ -333,6 +351,7 @@ class ConflictDetector:
         Args:
             dependencies: List of dependency dictionaries
             cuda_version: Optional system CUDA version
+            env_system: Optional system environment info
             python_version: Optional system Python version
         
         Returns:
@@ -346,7 +365,9 @@ class ConflictDetector:
         """
         result = {
             "version_conflicts": self.detect_version_conflicts(dependencies),
-            "runtime_conflicts": self.detect_runtime_conflicts(dependencies),
+            "runtime_conflicts": self.detect_runtime_conflicts(
+                dependencies, cuda_version=cuda_version, env_system=env_system
+            ),
             "abi_conflicts": [],
             "python_conflicts": []
         }

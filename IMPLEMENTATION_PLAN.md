@@ -86,8 +86,8 @@ This implementation plan provides a detailed roadmap for building `env-doctor`, 
 generate_package_uid(name)
 generate_version_uid(name, version)
 generate_dependency_uid(pkg, ver, dep)
-generate_compatibility_uid(pkg, pkg_range, dep, dep_range)
-generate_stack_uid(name, cuda_ver)
+generate_compatibility_uid(pkg, pkg_range, dep, dep_range, cuda_ver=None, env_sys=None)
+generate_stack_uid(name, cuda_ver, env_sys=None)
 generate_wheel_uid(pkg, ver, py_tag, platform_tag)
 generate_runtime_uid(runtime)
 ```

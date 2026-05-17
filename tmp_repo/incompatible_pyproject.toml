@@ -1,8 +1,0 @@
-[project]
-name = "bad-project"
-dependencies = [
-    "torch==2.4.0",
-    "bitsandbytes==0.42.0",
-    "peft==0.11.0",
-    "transformers<4.38.0"
-]

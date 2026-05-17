@@ -82,7 +82,12 @@ def generate_dependency_uid(pkg: str, ver: str, dep: str) -> str:
 
 
 def generate_compatibility_uid(
-    pkg: str, pkg_range: str, dep: str, dep_range: str
+    pkg: str,
+    pkg_range: str,
+    dep: str,
+    dep_range: str,
+    cuda_ver: Optional[str] = None,
+    env_sys: Optional[str] = None,
 ) -> str:
     """
     Generate deterministic UID for a compatibility rule.
@@ -92,35 +97,35 @@ def generate_compatibility_uid(
         pkg_range: Package version range (e.g., ">=2.0,<2.2")
         dep: Dependency name (e.g., "transformers")
         dep_range: Dependency version range (e.g., ">=4.30")
+        cuda_ver: Target CUDA version (e.g., "12.1")
+        env_sys: Environment system/OS info
         
     Returns:
         16-character UID
-        
-    Example:
-        >>> generate_compatibility_uid("torch", ">=2.0", "transformers", ">=4.30")
-        'm1n2o3p4q5r6s7t8'
     """
-    canonical = f"compat:{pkg.lower()}:{pkg_range}:{dep.lower()}:{dep_range}"
+    cuda_part = f":{cuda_ver}" if cuda_ver else ""
+    env_part = f":{env_sys}" if env_sys else ""
+    canonical = f"compat:{pkg.lower()}:{pkg_range}:{dep.lower()}:{dep_range}{cuda_part}{env_part}"
     return _hash_string(canonical)
 
 
-def generate_stack_uid(name: str, cuda_ver: Optional[str]) -> str:
+def generate_stack_uid(
+    name: str, cuda_ver: Optional[str], env_sys: Optional[str] = None
+) -> str:
     """
     Generate deterministic UID for a stable stack.
     
     Args:
         name: Stack name (e.g., "torch-2.1-transformers-4.38")
         cuda_ver: CUDA version (e.g., "11.8") or None
+        env_sys: Environment system/OS info
         
     Returns:
         16-character UID
-        
-    Example:
-        >>> generate_stack_uid("torch-2.1-transformers-4.38", "11.8")
-        'u1v2w3x4y5z6a7b8'
     """
     cuda_part = f":{cuda_ver}" if cuda_ver else ""
-    canonical = f"stack:{name.lower()}{cuda_part}"
+    env_part = f":{env_sys}" if env_sys else ""
+    canonical = f"stack:{name.lower()}{cuda_part}{env_part}"
     return _hash_string(canonical)
 
 

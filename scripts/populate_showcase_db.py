@@ -47,7 +47,9 @@ def populate_intelligence_layer(db_manager: DatabaseManager):
             "type": "incompatible",
             "confidence": "production-tested",
             "severity": 100,
-            "reason": "Flash Attention 2.0 requires Torch 2.0 or higher for CUDA graph support."
+            "reason": "Flash Attention 2.0 requires Torch 2.0 or higher for CUDA graph support.",
+            "cuda_version": None,
+            "env_system": None
         },
         {
             "package": "bitsandbytes",
@@ -57,7 +59,9 @@ def populate_intelligence_layer(db_manager: DatabaseManager):
             "type": "runtime-risk",
             "confidence": "community-tested",
             "severity": 80,
-            "reason": "Older bitsandbytes versions have stability issues with CUDA 12.4+ drivers."
+            "reason": "Older bitsandbytes versions have stability issues with CUDA 12.4+ drivers.",
+            "cuda_version": ">=12.4",
+            "env_system": None
         },
         {
             "package": "transformers",
@@ -67,7 +71,9 @@ def populate_intelligence_layer(db_manager: DatabaseManager):
             "type": "incompatible",
             "confidence": "stable",
             "severity": 90,
-            "reason": "Transformers 4.40+ uses new tokenizer APIs only available in tokenizers 0.19+."
+            "reason": "Transformers 4.40+ uses new tokenizer APIs only available in tokenizers 0.19+.",
+            "cuda_version": None,
+            "env_system": None
         },
         {
             "package": "unsloth",
@@ -77,19 +83,30 @@ def populate_intelligence_layer(db_manager: DatabaseManager):
             "type": "partial",
             "confidence": "production-tested",
             "severity": 60,
-            "reason": "Unsloth has known performance regressions with Torch 2.2.0/2.2.1; 2.3.0+ recommended."
+            "reason": "Unsloth has known performance regressions with Torch 2.2.0/2.2.1; 2.3.0+ recommended.",
+            "cuda_version": None,
+            "env_system": None
         }
     ]
     
     with db_manager.get_session() as session:
         for r in rules:
-            uid = generate_compatibility_uid(r["package"], r["version_range"], r["dependency"], r["dependency_range"])
+            uid = generate_compatibility_uid(
+                r["package"],
+                r["version_range"],
+                r["dependency"],
+                r["dependency_range"],
+                cuda_ver=r.get("cuda_version"),
+                env_sys=r.get("env_system")
+            )
             rule = CompatibilityRule(
                 uid=uid,
                 package_name=r["package"],
                 package_version_range=r["version_range"],
                 dependency_name=r["dependency"],
                 dependency_version_range=r["dependency_range"],
+                cuda_version=r.get("cuda_version"),
+                env_system=r.get("env_system"),
                 compatibility_type=r["type"],
                 confidence_level=r["confidence"],
                 severity=r["severity"],
@@ -107,6 +124,7 @@ def populate_stable_stacks(db_manager: DatabaseManager):
         {
             "name": "Llama-3-Production-Stack",
             "cuda": "12.1",
+            "env_system": "linux",
             "python": "3.10",
             "confidence": "production-tested",
             "desc": "Optimized stack for Llama 3 training and inference on H100/A100.",
@@ -121,6 +139,7 @@ def populate_stable_stacks(db_manager: DatabaseManager):
         {
             "name": "General-ML-Stable",
             "cuda": "11.8",
+            "env_system": None,
             "python": "3.9",
             "confidence": "stable",
             "desc": "Highly compatible stack for older GPUs and general NLP tasks.",
@@ -135,11 +154,12 @@ def populate_stable_stacks(db_manager: DatabaseManager):
     
     with db_manager.get_session() as session:
         for s in stacks:
-            stack_uid = generate_stack_uid(s["name"], s["cuda"])
+            stack_uid = generate_stack_uid(s["name"], s["cuda"], env_sys=s.get("env_system"))
             stack = StableStack(
                 uid=stack_uid,
                 name=s["name"],
                 cuda_version=s["cuda"],
+                env_system=s.get("env_system"),
                 python_version=s["python"],
                 confidence_level=s["confidence"],
                 description=s["desc"],
@@ -148,6 +168,7 @@ def populate_stable_stacks(db_manager: DatabaseManager):
             session.merge(stack)
             
             for pkg_name, pkg_ver in s["packages"]:
+                # Using generate_compatibility_uid as proxy for stack package UID
                 pkg_uid = generate_compatibility_uid(s["name"], pkg_name, pkg_ver, "")
                 stack_pkg = StableStackPackage(
                     uid=pkg_uid,

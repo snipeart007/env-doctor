@@ -59,6 +59,8 @@ CREATE TABLE IF NOT EXISTS compatibility_rules (
     package_version_range VARCHAR NOT NULL,  -- Package version range (e.g., '>=2.0,<2.2')
     dependency_name VARCHAR NOT NULL,  -- Dependency package name
     dependency_version_range VARCHAR NOT NULL,  -- Dependency version range
+    cuda_version VARCHAR,  -- Target CUDA version (e.g., '12.1')
+    env_system VARCHAR,  -- Operating system or environment info
     compatibility_type VARCHAR NOT NULL,  -- Type: compatible/incompatible/partial/runtime-risk/untested
     confidence_level VARCHAR NOT NULL,  -- Confidence: production-tested/stable/community-tested/experimental
     severity INTEGER NOT NULL CHECK(severity >= 0 AND severity <= 100),  -- Severity score (0-100)
@@ -78,6 +80,7 @@ CREATE TABLE IF NOT EXISTS stable_stacks (
     uid VARCHAR(16) PRIMARY KEY,  -- SHA-256 hash of stack
     name VARCHAR NOT NULL UNIQUE,  -- Stack name (e.g., 'torch-2.1-transformers-4.38')
     cuda_version VARCHAR,  -- CUDA version (e.g., '11.8')
+    env_system VARCHAR,  -- Operating system or environment info
     python_version VARCHAR NOT NULL,  -- Python version (e.g., '3.10')
     confidence_level VARCHAR NOT NULL,  -- Confidence: production-tested/stable/community-tested/experimental
     description TEXT NOT NULL,  -- Description of the stack and use cases

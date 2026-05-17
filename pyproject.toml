@@ -7,7 +7,7 @@ name = "env-doctor"
 version = "0.1.0"
 description = "AI development environment diagnostic and optimization tool"
 readme = "README.md"
-requires-python = ">=3.11 <3.13"
+requires-python = ">=3.11, <3.13"
 license = { text = "MIT" }
 authors = [
     { name = "env-doctor contributors" }
@@ -36,6 +36,7 @@ dependencies = [
     "nvidia-ml-py>=12.535.133",
     "nbclient>=0.10.4",
     "nbformat>=5.10.4",
+    "mcp>=1.27.1",
 ]
 
 [project.optional-dependencies]
@@ -111,4 +112,9 @@ addopts = [
     "--strict-config",
     "--cov=env_doctor",
     "--cov-report=term-missing",
+]
+
+[dependency-groups]
+dev = [
+    "ibm-watsonx-orchestrate>=2.9.0",
 ]

@@ -46,11 +46,6 @@ def test_compiler_initialization(temp_db):
     """Test YAMLCompiler initialization."""
     compiler = YAMLCompiler(temp_db)
     assert compiler.db_manager == temp_db
-    assert compiler.github_repo == "env-doctor/env-doctor-db"
-    
-    # Test custom repo
-    compiler2 = YAMLCompiler(temp_db, github_repo="custom/repo")
-    assert compiler2.github_repo == "custom/repo"
 
 
 def test_validate_compatibility_rules_yaml(compiler):
@@ -61,6 +56,8 @@ rules:
     version_range: ">=2.0.0,<2.1.0"
     dependency: transformers
     dependency_range: ">=4.30.0,<4.35.0"
+    cuda_version: "12.1"
+    env_system: "win32"
     type: incompatible
     confidence: community-tested
     severity: 90
@@ -78,6 +75,7 @@ def test_validate_stable_stacks_yaml(compiler):
 stacks:
   - name: torch-2.1-transformers-4.38
     cuda_version: "11.8"
+    env_system: "linux"
     python_version: ">=3.10,<3.12"
     confidence: production-tested
     description: "Stable stack for production inference"

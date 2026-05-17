@@ -34,6 +34,7 @@ console = Console()
 def recommend_stack(
     cuda_version: Optional[str] = typer.Option(None, "--cuda", help="CUDA version (e.g., 12.1)"),
     python_version: Optional[str] = typer.Option(None, "--python", help="Python version (e.g., 3.10)"),
+    platform: Optional[str] = typer.Option(None, "--platform", help="Target platform/OS (e.g., linux, win32)"),
     packages: Optional[List[str]] = typer.Option(None, "--package", help="Required packages"),
     interactive: bool = typer.Option(True, "--interactive/--no-interactive", help="Interactive selection"),
     show_migration: bool = typer.Option(True, "--migration/--no-migration", help="Show migration paths"),
@@ -52,7 +53,7 @@ def recommend_stack(
     
     Examples:
         env-doctor recommend
-        env-doctor recommend --cuda 12.1 --python 3.10
+        env-doctor recommend --cuda 12.1 --platform linux
         env-doctor recommend --package torch --package transformers
         env-doctor recommend --min-score 50 --confidence stable
         env-doctor recommend --no-interactive --no-migration
@@ -63,12 +64,13 @@ def recommend_stack(
         
         # Auto-detect versions if not provided
         if cuda_version is None:
-            detected_cuda = get_cuda_version()
-            if detected_cuda:
-                cuda_version = detected_cuda
+            cuda_version = get_cuda_version()
+            if cuda_version:
                 console.print(f"[dim]✓ Detected CUDA version: {cuda_version}[/dim]")
             else:
                 console.print("[dim]✓ No CUDA detected (CPU-only stacks will be recommended)[/dim]")
+        else:
+            console.print(f"[dim]Using CUDA version: {cuda_version}[/dim]")
         
         if python_version is None:
             python_version = get_python_version()
@@ -77,8 +79,15 @@ def recommend_stack(
             if len(parts) >= 2:
                 python_version = f"{parts[0]}.{parts[1]}"
             console.print(f"[dim]✓ Detected Python version: {python_version}[/dim]")
-        
-        # Get current packages for migration planning
+        else:
+            console.print(f"[dim]Using Python version: {python_version}[/dim]")
+
+        if platform is None:
+            import sys
+            platform = sys.platform
+            console.print(f"[dim]✓ Detected platform: {platform}[/dim]")
+        else:
+            console.print(f"[dim]Using platform: {platform}[/dim]")
         current_packages_list = get_installed_packages()
         current_packages = {pkg["name"]: pkg["version"] for pkg in current_packages_list}
         console.print(f"[dim]✓ Found {len(current_packages)} installed packages[/dim]")
@@ -115,6 +124,7 @@ def recommend_stack(
                     cuda_version=cuda_version,
                     python_version=python_version,
                     required_packages=packages,
+                    platform=platform,
                     confidence_threshold=confidence,
                     session=session
                 )

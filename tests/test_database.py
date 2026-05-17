@@ -73,6 +73,14 @@ class TestUIDGeneration:
         """Test compatibility rule UID generation."""
         uid = generate_compatibility_uid("torch", ">=2.0", "transformers", ">=4.30")
         assert len(uid) == 16
+        
+        # Test with new fields
+        uid_cuda = generate_compatibility_uid("torch", ">=2.0", "transformers", ">=4.30", cuda_ver="12.1")
+        assert uid_cuda != uid
+        
+        uid_sys = generate_compatibility_uid("torch", ">=2.0", "transformers", ">=4.30", env_sys="win32")
+        assert uid_sys != uid
+        assert uid_sys != uid_cuda
 
     def test_generate_stack_uid(self) -> None:
         """Test stack UID generation."""
@@ -81,6 +89,11 @@ class TestUIDGeneration:
         assert len(uid1) == 16
         assert len(uid2) == 16
         assert uid1 != uid2  # Different CUDA versions
+        
+        # Test with env_system
+        uid3 = generate_stack_uid("torch-2.1-transformers-4.38", "11.8", env_sys="linux")
+        assert uid3 != uid1
+        assert len(uid3) == 16
 
     def test_generate_wheel_uid(self) -> None:
         """Test wheel UID generation."""

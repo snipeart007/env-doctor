@@ -37,6 +37,7 @@ class CompatibilityAnalyzer:
         self,
         dependencies: List[Dict],
         cuda_version: Optional[str] = None,
+        env_system: Optional[str] = None,
         python_version: Optional[str] = None,
         include_graph_analysis: bool = False
     ) -> AnalysisReport:
@@ -44,32 +45,20 @@ class CompatibilityAnalyzer:
         Perform complete compatibility analysis.
         
         Args:
-            dependencies: List of dependency dictionaries with:
-                - package_name: str
-                - version: str
-                - requires: Optional[List[Dict]] (for version conflict detection)
-                - requires_python: Optional[str]
+            dependencies: List of dependency dictionaries
             cuda_version: Optional system CUDA version
+            env_system: Optional system environment info
             python_version: Optional system Python version
             include_graph_analysis: Whether to include dependency graph analysis
         
         Returns:
             AnalysisReport with complete analysis results
-            
-        Examples:
-            >>> analyzer = CompatibilityAnalyzer(db_manager)
-            >>> deps = [
-            ...     {"package_name": "torch", "version": "2.1.0"},
-            ...     {"package_name": "numpy", "version": "1.24.0"}
-            ... ]
-            >>> report = analyzer.analyze_dependencies(deps)
-            >>> print(report.status)
-            'ok'
         """
         # Detect all types of conflicts
         conflicts = self.conflict_detector.detect_all_conflicts(
             dependencies,
             cuda_version=cuda_version,
+            env_system=env_system,
             python_version=python_version
         )
         
@@ -154,7 +143,9 @@ class CompatibilityAnalyzer:
         package1: str,
         version1: str,
         package2: str,
-        version2: str
+        version2: str,
+        cuda_version: Optional[str] = None,
+        env_system: Optional[str] = None
     ) -> Optional[CompatibilityRule]:
         """
         Check if two specific package versions are compatible.
@@ -166,27 +157,34 @@ class CompatibilityAnalyzer:
             version1: First package version
             package2: Second package name
             version2: Second package version
+            cuda_version: Optional system CUDA version
+            env_system: Optional system environment info
         
         Returns:
             CompatibilityRule if found, None otherwise
-            
-        Examples:
-            >>> rule = analyzer.check_package_compatibility(
-            ...     "torch", "2.1.0",
-            ...     "tensorflow", "2.15.0"
-            ... )
-            >>> if rule:
-            ...     print(rule.compatibility_type)
         """
         with self.db_manager.get_session() as session:
             # Check both directions (package1 -> package2 and package2 -> package1)
             
             # Direction 1: package1 depends on package2
-            statement1 = select(CompatibilityRule).where(
+            stmt1 = select(CompatibilityRule).where(
                 CompatibilityRule.package_name == package1,
                 CompatibilityRule.dependency_name == package2
             )
-            rules1 = session.exec(statement1).all()
+            
+            # Add optional filters
+            if cuda_version:
+                stmt1 = stmt1.where(
+                    (CompatibilityRule.cuda_version == cuda_version) |
+                    (CompatibilityRule.cuda_version == None)
+                )
+            if env_system:
+                stmt1 = stmt1.where(
+                    (CompatibilityRule.env_system == env_system) |
+                    (CompatibilityRule.env_system == None)
+                )
+                
+            rules1 = session.exec(stmt1).all()
             
             for rule in rules1:
                 if (self.version_matcher.version_matches(version1, rule.package_version_range) and
@@ -194,11 +192,24 @@ class CompatibilityAnalyzer:
                     return rule
             
             # Direction 2: package2 depends on package1
-            statement2 = select(CompatibilityRule).where(
+            stmt2 = select(CompatibilityRule).where(
                 CompatibilityRule.package_name == package2,
                 CompatibilityRule.dependency_name == package1
             )
-            rules2 = session.exec(statement2).all()
+            
+            # Add optional filters
+            if cuda_version:
+                stmt2 = stmt2.where(
+                    (CompatibilityRule.cuda_version == cuda_version) |
+                    (CompatibilityRule.cuda_version == None)
+                )
+            if env_system:
+                stmt2 = stmt2.where(
+                    (CompatibilityRule.env_system == env_system) |
+                    (CompatibilityRule.env_system == None)
+                )
+                
+            rules2 = session.exec(stmt2).all()
             
             for rule in rules2:
                 if (self.version_matcher.version_matches(version2, rule.package_version_range) and
