@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "env-doctor"
+name = "env-doctor-pypi"
 version = "0.1.0"
 description = "AI development environment diagnostic and optimization tool"
 readme = "README.md"
