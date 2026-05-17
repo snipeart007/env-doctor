@@ -53,9 +53,9 @@ We save you from Out-Of-Memory (OOM) errors, silent CUDA fallback performance dr
 Install `env-doctor` globally using `uv` (recommended) or `pip`:
 
 ```bash
-pip install env-doctor
+pip install env-doctor-pypi
 # or
-uv tool install env-doctor
+uv tool install env-doctor-pypi
 ```
 
 ### 1. Sync the Intelligence Database
