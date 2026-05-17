@@ -50,7 +50,7 @@ dev = [
 ]
 
 [project.scripts]
-env-doctor = "env_doctor.main:app"
+env-doctor-pypi = "env_doctor.main:app"
 
 [project.urls]
 Homepage = "https://github.com/yourusername/env-doctor"
